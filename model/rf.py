@@ -3,6 +3,7 @@ from sklearn.metrics import mean_absolute_error, median_absolute_error
 from sklearn import ensemble
 from sklearn.model_selection import GridSearchCV, KFold
 from model.base_regressor import BaseRegressor
+import numpy as np
 
 class RandomForest(BaseRegressor):
 
@@ -30,14 +31,37 @@ class RandomForest(BaseRegressor):
             self.min_samples_leaf = 4 # default parameter for Ranfom Forest
             self.n_estimator = 500
 
+    def getStdDevAndConfidence(self,rf):
 
-    def train(self):
+        kf = KFold(n_splits=10)
+
+        maes = []
+        v_ijs = []
+        for train_index, test_index in kf.split(self.data):
+            X_train, X_test = self.data[train_index], self.data[test_index]
+            y_train, y_test = self.y[train_index], self.y[test_index]
+            rf.fit(X_train, y_train)
+            V_IJ, V_IJ_unbiased = self.confidenceCal(X_train, X_test, rf)
+            predictions = rf.predict
+
+            mae = mean_absolute_error(y_test, predictions)
+            maes.append(mae)
+            v_ijs.append(V_IJ)
+
+        return np.std(maes), np.mean(v_ijs)
+
+
+    def getTrainingSize(self):
+        return len(self.data)
+
+
+    def loadData(self):
         if not self._customizeFeatureSet:
             # generate features
-            data, y = self.extractFeatures()
+            self.data, self.y = self.extractFeatures()
         else:
-            data, y, _featureDesp = self.extractFeatures(customizeFeatureSet=True)
-        return self.trainWithData(data, y)
+            self.data, self.y, _featureDesp = self.extractFeatures(customizeFeatureSet=True)
+
 
 
     def confidenceCal(self, train_data, test_data, test_y, predictions,rf, patientID):
@@ -66,7 +90,7 @@ class RandomForest(BaseRegressor):
 
 
 
-    def trainWithData(self, data, y, _featureDesp="all"):
+    def train(self, data, y, _featureDesp="all"):
         assert (len(data) == len(y))
 
         self.rf = self.models[self.modelName](n_estimators=self.n_estimator, criterion=self.criterion,

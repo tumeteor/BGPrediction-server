@@ -70,7 +70,7 @@ class DBConnector:
                     patientId=self.patientId)
                 self.log.debug("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
-                logging.debug("{} rows returned".format(cur.rowcount))
+                self.log.debug("{} rows returned".format(cur.rowcount))
                 rows = cur.fetchall()
                 if not rows:
                     self.log.error("No insulin data was returned!")
@@ -84,7 +84,7 @@ class DBConnector:
                         "WHERE patientID = {patientId} and date > '2017-02-25'".format(patientId=self.patientId)
                 self.log.debug("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
-                logging.debug("{} rows returned".format(cur.rowcount))
+                self.log.debug("{} rows returned".format(cur.rowcount))
                 rows = cur.fetchall()
                 if not rows:
                     self.log.error("No insulin data was returned!")
