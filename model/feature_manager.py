@@ -287,7 +287,7 @@ class FeatureManager:
         return features
 
 
-    def extractFeaturesforOneInstance(self,i, look_back):
+    def extractFeaturesForOneInstance(self, i, look_back):
         # time of predicted value
         next_time = self.glucoseData[i]['time']
         # current time
@@ -339,7 +339,7 @@ class FeatureManager:
         labels = list()
         for i in range(1, self.n_samples):
 
-            features = self.extractFeaturesforOneInstance(i, look_back)
+            features = self.extractFeaturesForOneInstance(i, look_back)
             result.append(features)
 
 

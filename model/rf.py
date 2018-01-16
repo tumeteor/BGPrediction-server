@@ -23,8 +23,9 @@ class RandomForest(BaseRegressor):
     min_samples_leaf = 2 # small for ExtraTree is helpful
 
 
-    def __init__(self, patientId, dbConnection, modelName):
-        super(RandomForest, self).__init__(patientId, dbConnection)
+    def __init__(self, patientId, modelName):
+        super(RandomForest, self).__init__(patientId)
+        self.log.info("Init Random Forest")
         self.modelName = modelName
         #self.tune = True
         if self.modelName == "rf":
@@ -42,7 +43,7 @@ class RandomForest(BaseRegressor):
             y_train, y_test = self.y[train_index], self.y[test_index]
             rf.fit(X_train, y_train)
             V_IJ, V_IJ_unbiased = self.confidenceCal(X_train, X_test, rf)
-            predictions = rf.predict
+            predictions = rf.predictJob
 
             mae = mean_absolute_error(y_test, predictions)
             maes.append(mae)
@@ -89,7 +90,7 @@ class RandomForest(BaseRegressor):
         self.rf.fit(data, y)
 
     def predict(self, instance):
-        bg_prediction = self.rf.predict(instance)
+        bg_prediction = self.rf.predictJob(instance)
 
         return bg_prediction
 

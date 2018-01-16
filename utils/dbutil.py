@@ -1,6 +1,7 @@
 import mysql.connector
 import pandas as pd
-
+import time, datetime
+import logging
 
 class DBConnector:
 
@@ -14,19 +15,31 @@ class DBConnector:
     }
 
     def __init__(self, patientId):
+        # configure log
+        logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
+                            datefmt='%d.%m.%Y %I:%M:%S %p', level=logging.INFO)
+        self.log = logging.getLogger("DBConnector")
+        self.connectDB()
         self.patientId = patientId
         self.glucoseData = list()
         self.insulinData = list()
         self.carbData = list()
         self.activityData = list()
 
+
+    def __init__(self):
+        self.connectDB()
+
     def connectDB(self):
-        self.cnx = mysql.connector.connect(**self.config)
+        self.con = mysql.connector.connect(**self.config)
 
     def closeDB(self):
-        self.cnx.close()
+        self.con.close()
 
     def loadAllData(self):
+        if self.patientId == None:
+            self.log.error.info("No patient ID provided")
+            return
         ###### LOAD DATA ######
         self.loadGlucoseData()
         self.loadInsulinData()
@@ -133,12 +146,12 @@ class DBConnector:
 
     ''''' load the raw timestamp for blood glucose data '''
 
-    def loadTimestamps(self, con, patientId):
-        with con:
-            cur = con.cursor()
+    def loadTimestamps(self, patientId):
+        with self.con:
+            cur = self.con.cursor()
             query = "SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'date' FROM storage_blood_sugar_data " \
                     "WHERE user_entity_uuid = {patientId} cross join (select @rownum := 0) r order by 'time' ".format(patientId=patientId)
-            df = pd.read_sql(query, con)
+            df = pd.read_sql(query, self.con)
         df['date'] = pd.to_datetime(df['date'])
         df = df.set_index('date')
         # IMPORTANT: sort by date
@@ -146,13 +159,20 @@ class DBConnector:
 
         return df
 
-    def storePrediction(self, con, patientId, score, type, user_entity_uuid):
-        with con:
-            cur = con.cursor
+    def storePrediction(self, patientId, score, ptype):
+        ts = time.time()
+        timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+        with self.con:
+            cur = self.con.cursor
             sql = "INSERT into storage_recommendation_data (date_time, score, type, user_entity_uuid ) VALUES  \
-                (score, type, user_entity_uuid)"
-            self.log.info("insert prediction for user {}:".format(user_entity_uuid))
-            cur.execute(sql)
+                (%(date_time)s, %(score)s, %(ptype)s, %(user_entity_uuid)s)."
+            self.log.info("insert prediction for user {}:".format(patientId))
+            cur.execute(sql, {
+                "date_time": timestamp,
+                "score": score,
+                "ptype": ptype,
+                "user_entity_uuid": patientId
+            })
 
 
 

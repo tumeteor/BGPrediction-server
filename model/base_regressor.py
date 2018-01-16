@@ -1,11 +1,6 @@
-import time
 import logging
-import pandas as pd
 from feature_manager import FeatureManager
-import numpy as np
-import matplotlib.dates as md
 from utils.dbutil import DBConnector
-
 
 class BaseRegressor(object):
 
@@ -14,8 +9,10 @@ class BaseRegressor(object):
                             datefmt='%d.%m.%Y %I:%M:%S %p', level=logging.DEBUG)
         self.log = logging.getLogger("BaseClassifier")
 
-        dbc = DBConnector(patientId=patientId)
-        self.glucoseData, self.insulinData, self.carbData, self.activityData = dbc.loadAllData()
+        self.dbc = DBConnector(patientId=patientId)
+        self.log.info("Start loading data from DB.")
+        self.glucoseData, self.insulinData, self.carbData, self.activityData = self.dbc.loadAllData()
+        self.log.info("End loading data from DB.")
 
         ###### LOAD Feature Extraction ####
         self.Features = FeatureManager(self.glucoseData, self.insulinData, self.carbData,
@@ -52,5 +49,5 @@ class BaseRegressor(object):
     def loadInstance(self):
         return self.Features.getNextInstance()
 
-    def extractFeatures(self, i):
-        return self.Features.extractFeaturesforOneInstance(i, look_back=self.look_back)
+    def extractFeaturesForOneInstance(self, i):
+        return self.Features.extractFeaturesForOneInstance(i, look_back=self.look_back)
