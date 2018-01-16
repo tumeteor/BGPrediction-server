@@ -5,10 +5,10 @@ import pandas as pd
 class DBConnector:
 
     config = {
-        'user': 'scott',
-        'password': 'tiger',
+        'user': 'root',
+        'password': 'pu9eek9I',
         'host': '127.0.0.1',
-        'database': 'employees',
+        'database': 'glycorec_server',
         'raise_on_warnings': True,
         'use_pure': False,
     }
@@ -43,8 +43,8 @@ class DBConnector:
         self.log.info("Loading Glucose data for patient {}".format(self.patientId))
         with self.con:
             cur = self.con.cursor()
-            query = "SELECT date as 'time', `gt-value` as 'value', pos as 'index' FROM BG_Instance " \
-                    "WHERE patientID = {patientId} and date > '2017-02-25'".format(patientId=self.patientId)
+            query = "SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'time', `bs_value_mgdl` as 'value' FROM storage_blood_sugar_data " \
+                    "WHERE user_entity_uuid = {patientId} cross join (select @rownum := 0) r order by 'time'".format(patientId=self.patientId)
             self.log.debug("loadGlucoseData() query: '" + query + "'")
             cur.execute(query)
             self.log.debug("{} rows returned".format(cur.rowcount))
@@ -65,8 +65,8 @@ class DBConnector:
         if ignoreBasal:
             with self.con:
                 cur = self.con.cursor()
-                query = "SELECT date as 'time', value, type FROM BG_Insulin " \
-                        "WHERE patientID = {patientId} and date > '2017-02-25' and type='rapid'".format(
+                query = "SELECT date_time as 'time', insulin_units as 'value', type FROM storage_insulin_data " \
+                        "WHERE user_entity_uuid = {patientId} and type=1 order by 'time'".format(
                     patientId=self.patientId)
                 self.log.debug("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
@@ -80,8 +80,8 @@ class DBConnector:
         else:
             with self.con:
                 cur = self.con.cursor()
-                query = "SELECT date as 'time', value, type FROM BG_Insulin " \
-                        "WHERE patientID = {patientId} and date > '2017-02-25'".format(patientId=self.patientId)
+                query = "SELECT date_time as 'time', insulin_units as 'value', type FROM storage_insulin_data " \
+                        "WHERE user_entity_uuid = {patientId} and type is not NULL order by 'time'".format(patientId=self.patientId)
                 self.log.debug("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
                 self.log.debug("{} rows returned".format(cur.rowcount))
@@ -99,8 +99,8 @@ class DBConnector:
         self.log.info("Loading carbohydrate data for patient {}".format(self.patientId))
         with self.con:
             cur = self.con.cursor()
-            query = "SELECT date as 'time', value FROM BG_carbohydrate " \
-                    "WHERE patientID = {patientId} and date > '2017-02-25'".format(patientId=self.patientId)
+            query = "SELECT date_time as 'time', kcal as 'value' FROM storage_meal_data " \
+                    "WHERE user_entity_uuid = {patientId} order by 'time'".format(patientId=self.patientId)
             self.log.debug("loadCarbohydrateData() query: '" + query + "'")
             cur.execute(query)
             self.log.debug("{} rows returned".format(cur.rowcount))
@@ -119,8 +119,8 @@ class DBConnector:
         self.log.info("Loading activity data for patient {}".format(self.patientId))
         with self.con:
             cur = self.con.cursor()
-            query = "SELECT date as 'time', value FROM BG_steps " \
-                    "WHERE patientID = {patientId} and date > '2017-02-25'".format(patientId=self.patientId)
+            query = "SELECT date_time as 'time', kcal as 'value' FROM storage_planned_activity " \
+                    "WHERE user_entity_uuid = {patientId} order by 'time'".format(patientId=self.patientId)
             self.log.debug("loadActivityData() query: '" + query + "'")
             cur.execute(query)
             self.log.debug("{} rows returned".format(cur.rowcount))
@@ -136,8 +136,8 @@ class DBConnector:
     def loadTimestamps(self, con, patientId):
         with con:
             cur = con.cursor()
-            query = "SELECT date, pos FROM BG_Instance " \
-                    "WHERE patientID = {patientId} ".format(patientId=patientId)
+            query = "SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'date' FROM storage_blood_sugar_data " \
+                    "WHERE user_entity_uuid = {patientId} cross join (select @rownum := 0) r order by 'time' ".format(patientId=patientId)
             df = pd.read_sql(query, con)
         df['date'] = pd.to_datetime(df['date'])
         df = df.set_index('date')
@@ -145,6 +145,17 @@ class DBConnector:
         df = df.sort_index()
 
         return df
+
+    def storePrediction(self, con, patientId, score, type, user_entity_uuid):
+        with con:
+            cur = con.cursor
+            sql = "INSERT into storage_recommendation_data (date_time, score, type, user_entity_uuid ) VALUES  \
+                (score, type, user_entity_uuid)"
+            self.log.info("insert prediction for user {}:".format(user_entity_uuid))
+            cur.execute(sql)
+
+
+
 
 
 

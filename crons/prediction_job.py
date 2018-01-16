@@ -12,11 +12,11 @@ class PredictionManager:
 
     @property
     def predict(self):
-        nextIns = self.rf.loadInstance()
+        nextIns = self.rf.loadInstance() # get the index of the next bg
         instance = self.rf.extractFeatures(nextIns)
         if self.check_criterias():
-            prediction = self.rf.predict(instance)
-            return prediction
+            bg_prediction = self.rf.predict(instance)
+            return bg_prediction
         else:
             return
 
@@ -29,6 +29,9 @@ class PredictionManager:
         pass
 
     def storePrediction(self):
+
+
+
         pass
 
 

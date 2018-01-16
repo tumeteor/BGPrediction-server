@@ -1,5 +1,5 @@
 import datetime
-from util.measures import getTimeBinInt
+from utils.measures import getTimeBinInt
 from utils.measures import mean
 from utils.timeutil import tohour
 import numpy as np
@@ -291,12 +291,12 @@ class FeatureManager:
         # time of predicted value
         next_time = self.glucoseData[i]['time']
         # current time
-        # cur_time = next_time - datetime.timedelta(minutes=self.horizon_minutes)
+        cur_time = next_time - datetime.timedelta(minutes=self.horizon_minutes)
 
         # Note 05/11/17: all filtering for predictions with gap less than k hours
-        cur_time = self.glucoseData[i - 1]['time']
+        last_time = self.glucoseData[i - 1]['time']
 
-        delta_time = next_time - cur_time
+        delta_time = next_time - last_time
         # if delta_time.seconds > 2 * 60 * 60: continue
 
         # labels.append(self.glucoseData[i])
@@ -354,7 +354,8 @@ class FeatureManager:
 
     def getNextInstance(self):
         # return the idx of the next bg measurement
-        return
+
+        return self.n_samples
 
 
 class FeatureGroup:

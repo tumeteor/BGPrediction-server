@@ -11,6 +11,7 @@ if __name__ == '__main__':
 
     patientIDs = []
 
+    # add cron job for each patient
     for patient in patientIDs:
         scheduler.add_job(trainMan.training(patientId=patient), 'inteval',
                           next_run_time=datetime.now(), minutes=30)

@@ -75,16 +75,6 @@ class RandomForest(BaseRegressor):
         print "inbag: {}".format(inbag)
         print "V_IJ_unbiased: {}".format(V_IJ_unbiased)
         # Plot error bars for predicted MPG using unbiased variance
-        (_, caps, _) = plt.errorbar(predictions, test_y, yerr=np.sqrt(V_IJ_unbiased), fmt='o', markersize=4, capsize=10, mfc='red',
-         mec='green')
-        for cap in caps:
-            cap.set_markeredgewidth(1)
-        plt.title('Error bars for Patient: ' + str(patientID))
-
-        plt.xlabel('Actual BG')
-        plt.ylabel('Predicted BG')
-        plt.savefig("prediction/tmp/confidence_intervals_patient{}_4.png".format(self.patientId))
-        plt.close()
 
         return inbag, V_IJ_unbiased
 
@@ -98,7 +88,10 @@ class RandomForest(BaseRegressor):
 
         self.rf.fit(data, y)
 
-    def predict(self, instance): pass
+    def predict(self, instance):
+        bg_prediction = self.rf.predict(instance)
+
+        return bg_prediction
 
 
 
