@@ -69,9 +69,11 @@ class DBConnector:
         """
         self.log.info("Loading Glucose data for patient {}".format(self.patientId))
         with self.manage_transaction() as cur:
-            query = "SELECT * FROM(SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'time', `bs_value_mgdl` as 'value' FROM storage_blood_sugar_data " \
-                    "cross join (select @rownum := 0) r order by 'time') WHERE a.user_entity_uuid = {patientId}".format(patientId=self.patientId)
+            query = "SELECT pos, time, value FROM (SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'time', `bs_value_mgdl` as 'value'," \
+                    "user_entity_uuid FROM storage_blood_sugar_data " \
+                    "cross join (select @rownum := 0) r order by 'time') a WHERE a.user_entity_uuid = {patientId}".format(patientId=self.patientId)
             self.log.debug("loadGlucoseData() query: '" + query + "'")
+            print(query)
             cur.execute(query)
             self.log.info("{} rows returned".format(cur.rowcount))
             rows = cur.fetchall()
