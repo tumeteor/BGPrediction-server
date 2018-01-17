@@ -24,6 +24,7 @@ class DBConnector:
         self.insulinData = list()
         self.carbData = list()
         self.activityData = list()
+        self.con = None
 
     from contextlib import contextmanager
 
