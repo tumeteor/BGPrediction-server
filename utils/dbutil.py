@@ -34,7 +34,7 @@ class DBConnector:
         try:
             try:
                 self.con.start_transaction(*args, **kw)
-                yield self.con.cursor()
+                yield self.con.cursor(dictionary=True)
             except:
                 exc = True
                 self.con.rollback()

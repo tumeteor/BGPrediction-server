@@ -95,7 +95,7 @@ class FeatureManager:
             t_w = np.exp(-time_diff)
             avg_prev += t_w * prev['value']
             avg_prev_w += t_w
-        timeWeightAvgGlucose = avg_prev / avg_prev_w
+        timeWeightAvgGlucose = avg_prev / avg_prev_w if len(prev_glucose) != 0 else 0
 
         timeWeightAvgGlucoseFeature = Feature("timeWeightAvgGlucose", timeWeightAvgGlucose)
         self.glucoseFeatureGroup.addFeature(timeWeightAvgGlucoseFeature)
