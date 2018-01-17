@@ -1,5 +1,5 @@
 import datetime
-from utils.measures import getTimeBinInt
+from utils.timeutil import getTimeBinInt
 from utils.measures import mean
 from utils.timeutil import tohour
 import numpy as np

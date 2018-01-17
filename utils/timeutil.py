@@ -18,6 +18,18 @@ def tohour(duration):
 def strToDateTime(t):
     return time.strptime(t,"'%d/%m/%y %H:%M:%S")
 
+
+def getTimeBinInt(timestamp):
+    binString = getTimeBin(timestamp)
+    if binString == _night:
+        return 0
+    if binString == _morning:
+        return 1
+    if binString == _afternoon:
+        return 2
+    if binString == _evening:
+        return 3
+
 def getTimeBin(timestamp):
     """
     Return the time bin for the given datetime input
