@@ -15,7 +15,7 @@ class FeatureManager:
     Add new features here
     """
 
-    def __init__(self, glucoseData, insulinData, carbData, activityData, patientId):
+    def __init__(self, glucoseData, insulinData, carbData, activityData):
         logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
                             datefmt='%d.%m.%Y %I:%M:%S %p', level=logging.INFO)
         self.log = logging.getLogger("FeatureManager")

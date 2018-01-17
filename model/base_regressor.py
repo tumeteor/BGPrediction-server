@@ -16,7 +16,7 @@ class BaseRegressor(object):
 
         ###### LOAD Feature Extraction ####
         self.Features = FeatureManager(self.glucoseData, self.insulinData, self.carbData,
-                                       self.activityData, self.patientId)
+                                       self.activityData)
         # tuning option for RF
         # set it now as a common parameter
         # for all models
