@@ -24,7 +24,7 @@ class RandomForest(BaseRegressor):
 
 
     def __init__(self, patientId, modelName):
-        super(RandomForest, self).__init__(patientId)
+        super(RandomForest, self).__init__(patientId=patientId)
         self.log.info("Init Random Forest")
         self.modelName = modelName
         #self.tune = True
