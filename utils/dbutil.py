@@ -71,7 +71,7 @@ class DBConnector:
         with self.manage_transaction() as cur:
             query = "SELECT pos, time, value FROM (SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'time', `bs_value_mgdl` as 'value'," \
                     "user_entity_uuid FROM storage_blood_sugar_data " \
-                    "cross join (select @rownum := 0) r order by 'time') a WHERE a.user_entity_uuid = {patientId}".format(patientId=self.patientId)
+                    "cross join (select @rownum := 0) r order by 'time') a WHERE a.user_entity_uuid = '{patientId}'".format(patientId=self.patientId)
             self.log.debug("loadGlucoseData() query: '" + query + "'")
             print(query)
             cur.execute(query)
@@ -179,8 +179,11 @@ class DBConnector:
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         with self.manage_transaction() as cur:
             cur = self.con.cursor
-            sql = "INSERT into storage_recommendation_data (date_time, score, type, user_entity_uuid ) VALUES  \
-                (%(date_time)s, %(score)s, %(ptype)s, %(user_entity_uuid)s)."
+            # sql = "INSERT into storage_recommendation_data (date_time, score, type, user_entity_uuid ) VALUES  \
+            #     (%(date_time)s, %(score)s, %(ptype)s, %(user_entity_uuid)s)."
+
+            sql = "INSERT INTO storage_blood_suger_prediction (date_time, probability, value_mgdl, value_mmoll, user_entity_uuid) VALUES \
+                (%(date_time)s, %(probability)s, %(value_mgdl)s, %(value_mmoll)s"
             self.log.info("insert prediction for user {}:".format(patientId))
             cur.execute(sql, {
                 "date_time": timestamp,

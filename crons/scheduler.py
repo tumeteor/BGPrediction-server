@@ -9,7 +9,7 @@ if __name__ == '__main__':
     trainMan = TrainingManager()
     predMan = PredictionManager()
 
-    patientIds = ['00bd6e5f-d918-4e9f-9699-d96e5a6220ef', '04828d88-0cfc-46f8-a2a6-6aaff400fbcc']
+    patientIds = ['3f456e62-7239-42ca-b40e-74b11536a76d', 'e5ce302f-8510-4720-9f35-24eb6c64c089']
 
     # add cron job for each patient
     for patientId in patientIds:
