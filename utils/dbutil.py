@@ -29,7 +29,7 @@ class DBConnector:
     from contextlib import contextmanager
 
     @contextmanager
-    def manage_transaction(conn, *args, **kw):
+    def manage_transaction(self, conn, *args, **kw):
         exc = False
         try:
             try:
