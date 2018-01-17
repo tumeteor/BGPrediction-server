@@ -27,9 +27,6 @@ class DBConnector:
         self.activityData = list()
 
 
-    def __init__(self):
-        self.connectDB()
-
     def connectDB(self):
         self.con = mysql.connector.connect(**self.config)
 
