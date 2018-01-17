@@ -52,6 +52,7 @@ class DBConnector:
         if self.patientId == None:
             self.log.error.info("No patient ID provided")
             return
+        self.connectDB()
         ###### LOAD DATA ######
         self.loadGlucoseData()
         self.loadInsulinData()
