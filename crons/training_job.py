@@ -18,7 +18,7 @@ class TrainingManager:
         self.log = logging.getLogger("TrainingManager")
 
     def trainingJob(self, patientId):
-        self.rf = RandomForest(patientId=patientId)
+        self.rf = RandomForest(patientId=patientId,modelName="rf")
         self.rf.loadData()
 
         if (self.check_criterias_for_training()):
