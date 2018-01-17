@@ -69,11 +69,11 @@ class DBConnector:
         """
         self.log.info("Loading Glucose data for patient {}".format(self.patientId))
         with self.manage_transaction() as cur:
-            query = "SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'time', `bs_value_mgdl` as 'value' FROM storage_blood_sugar_data " \
-                    "WHERE user_entity_uuid = {patientId} cross join (select @rownum := 0) r order by 'time'".format(patientId=self.patientId)
+            query = "SELECT * FROM(SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'time', `bs_value_mgdl` as 'value' FROM storage_blood_sugar_data " \
+                    "cross join (select @rownum := 0) r order by 'time') WHERE a.user_entity_uuid = {patientId}".format(patientId=self.patientId)
             self.log.debug("loadGlucoseData() query: '" + query + "'")
             cur.execute(query)
-            self.log.debug("{} rows returned".format(cur.rowcount))
+            self.log.info("{} rows returned".format(cur.rowcount))
             rows = cur.fetchall()
             if not rows:
                 self.log.error("No Glucose data was returned!")
@@ -96,7 +96,7 @@ class DBConnector:
                     patientId=self.patientId)
                 self.log.debug("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
-                self.log.debug("{} rows returned".format(cur.rowcount))
+                self.log.info("{} rows returned".format(cur.rowcount))
                 rows = cur.fetchall()
                 if not rows:
                     self.log.error("No insulin data was returned!")
@@ -110,7 +110,7 @@ class DBConnector:
                         "WHERE user_entity_uuid = {patientId} and type is not NULL order by 'time'".format(patientId=self.patientId)
                 self.log.debug("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
-                self.log.debug("{} rows returned".format(cur.rowcount))
+                self.log.info("{} rows returned".format(cur.rowcount))
                 rows = cur.fetchall()
                 if not rows:
                     self.log.error("No insulin data was returned!")
@@ -162,8 +162,8 @@ class DBConnector:
     def loadTimestamps(self, patientId):
         with self.manage_transaction() as cur:
             cur = self.con.cursor()
-            query = "SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'date' FROM storage_blood_sugar_data " \
-                    "WHERE user_entity_uuid = {patientId} cross join (select @rownum := 0) r order by 'time' ".format(patientId=patientId)
+            query = "SELECT * FROM (SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'date' FROM storage_blood_sugar_data " \
+                    "cross join (select @rownum := 0) r order by 'time') WHERE a.user_entity_uuid = {patientId}".format(patientId=patientId)
             df = pd.read_sql(query, self.con)
         df['date'] = pd.to_datetime(df['date'])
         df = df.set_index('date')
