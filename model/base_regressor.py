@@ -1,5 +1,5 @@
 import logging
-from feature_manager import FeatureManager
+from model.feature_manager import FeatureManager
 from utils.dbutil import DBConnector
 
 class BaseRegressor(object):
