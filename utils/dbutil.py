@@ -10,8 +10,7 @@ class DBConnector:
         'password': 'pu9eek9I',
         'host': '127.0.0.1',
         'database': 'glycorec_server',
-        'raise_on_warnings': True,
-        'use_pure': False,
+        'raise_on_warnings': True
     }
 
     def __init__(self, patientId):
