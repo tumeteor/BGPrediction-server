@@ -29,18 +29,18 @@ class DBConnector:
     from contextlib import contextmanager
 
     @contextmanager
-    def manage_transaction(self, conn, *args, **kw):
+    def manage_transaction(self, *args, **kw):
         exc = False
         try:
             try:
-                conn.start_transaction(*args, **kw)
-                yield conn.cursor()
+                self.con.start_transaction(*args, **kw)
+                yield self.con.cursor()
             except:
                 exc = True
-                conn.rollback()
+                self.con.rollback()
         finally:
             if not exc:
-                conn.commit()
+                self.con.commit()
 
 
     def connectDB(self):
@@ -68,8 +68,7 @@ class DBConnector:
         Retrieve glucose (ground truth) data from database
         """
         self.log.info("Loading Glucose data for patient {}".format(self.patientId))
-        with self.manage_transaction(self.con):
-            cur = self.con.cursor()
+        with self.manage_transaction() as cur:
             query = "SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'time', `bs_value_mgdl` as 'value' FROM storage_blood_sugar_data " \
                     "WHERE user_entity_uuid = {patientId} cross join (select @rownum := 0) r order by 'time'".format(patientId=self.patientId)
             self.log.debug("loadGlucoseData() query: '" + query + "'")
@@ -90,7 +89,7 @@ class DBConnector:
         """
         self.log.info("Loading insulin data for patient {}".format(self.patientId))
         if ignoreBasal:
-            with self.manage_transaction(self.con):
+            with self.manage_transaction() as cur:
                 cur = self.con.cursor()
                 query = "SELECT date_time as 'time', insulin_units as 'value', type FROM storage_insulin_data " \
                         "WHERE user_entity_uuid = {patientId} and type=1 order by 'time'".format(
@@ -105,7 +104,7 @@ class DBConnector:
                 for row in rows:
                     self.insulinData.append(row)
         else:
-            with self.manage_transaction(self.con):
+            with self.manage_transaction() as cur:
                 cur = self.con.cursor()
                 query = "SELECT date_time as 'time', insulin_units as 'value', type FROM storage_insulin_data " \
                         "WHERE user_entity_uuid = {patientId} and type is not NULL order by 'time'".format(patientId=self.patientId)
@@ -124,7 +123,7 @@ class DBConnector:
         Retrieve carbohydrate data
         """
         self.log.info("Loading carbohydrate data for patient {}".format(self.patientId))
-        with self.manage_transaction(self.con):
+        with self.manage_transaction() as cur:
             cur = self.con.cursor()
             query = "SELECT date_time as 'time', kcal as 'value' FROM storage_meal_data " \
                     "WHERE user_entity_uuid = {patientId} order by 'time'".format(patientId=self.patientId)
@@ -144,7 +143,7 @@ class DBConnector:
         """
         # FIXED: import steps and use them in place of Akcal
         self.log.info("Loading activity data for patient {}".format(self.patientId))
-        with self.manage_transaction(self.con):
+        with self.manage_transaction() as cur:
             cur = self.con.cursor()
             query = "SELECT date_time as 'time', kcal as 'value' FROM storage_planned_activity " \
                     "WHERE user_entity_uuid = {patientId} order by 'time'".format(patientId=self.patientId)
@@ -161,7 +160,7 @@ class DBConnector:
     ''''' load the raw timestamp for blood glucose data '''
 
     def loadTimestamps(self, patientId):
-        with self.manage_transaction(self.con):
+        with self.manage_transaction() as cur:
             cur = self.con.cursor()
             query = "SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'date' FROM storage_blood_sugar_data " \
                     "WHERE user_entity_uuid = {patientId} cross join (select @rownum := 0) r order by 'time' ".format(patientId=patientId)
@@ -176,7 +175,7 @@ class DBConnector:
     def storePrediction(self, patientId, score, ptype):
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-        with self.manage_transaction(self.con):
+        with self.manage_transaction() as cur:
             cur = self.con.cursor
             sql = "INSERT into storage_recommendation_data (date_time, score, type, user_entity_uuid ) VALUES  \
                 (%(date_time)s, %(score)s, %(ptype)s, %(user_entity_uuid)s)."
