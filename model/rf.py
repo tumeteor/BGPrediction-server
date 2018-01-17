@@ -73,8 +73,8 @@ class RandomForest(BaseRegressor):
         inbag = fci.calc_inbag(train_data.shape[0], rf)
         V_IJ_unbiased = fci.random_forest_error(rf, train_data, test_data)
 
-        print "inbag: {}".format(inbag)
-        print "V_IJ_unbiased: {}".format(V_IJ_unbiased)
+        print("inbag: {}".format(inbag))
+        print("V_IJ_unbiased: {}".format(V_IJ_unbiased))
         # Plot error bars for predicted MPG using unbiased variance
 
         return inbag, V_IJ_unbiased
