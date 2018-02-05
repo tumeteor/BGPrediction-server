@@ -1,4 +1,4 @@
-import pickle
+import six.moves.cPickle as pickle
 from training_job import TrainingManager
 import os
 import logging
@@ -11,13 +11,15 @@ class PredictionManager:
                             datefmt='%d.%m.%Y %I:%M:%S %p', level=logging.INFO)
         self.log = logging.getLogger("PredictionManager")
 
-    def load_model(self, patientID):
+    def load_model(self, patientId):
+        with open(TrainingManager.PICKELPATH + patientId + ".pkl", 'rb') as f:
+            self.rf = pickle.load(f, encoding="bytes")
 
-        f = open(TrainingManager.PICKELPATH + patientID + ".pkl", 'rb')
-        self.rf = pickle.load(f, encoding="bytes")
 
-    @property
     def predictJob(self, patientId):
+        if os.path.isfile(TrainingManager.PICKELPATH + patientId + ".pkl"):
+            self.log("model serialization exists.")
+        else: return
         self.load_model(patientId)
         nextIns = self.rf.loadInstance() # get the index of the next bg
         instance = self.rf.extractFeaturesForOneInstance(nextIns)

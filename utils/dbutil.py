@@ -2,6 +2,52 @@ import mysql.connector
 import pandas as pd
 import time, datetime
 import logging
+from contextlib import contextmanager
+
+
+class _DBConnector:
+    config = {
+        'user': 'root',
+        'password': 'pu9eek9I',
+        'host': '127.0.0.1',
+        'database': 'glycorec_server',
+        'raise_on_warnings': True
+    }
+
+    def __init__(self):
+        self.con = mysql.connector.connect(**self.config)
+
+
+    @contextmanager
+    def manage_transaction(self, *args, **kw):
+        exc = False
+        try:
+            try:
+                self.con.start_transaction(*args, **kw)
+                yield self.con.cursor(dictionary=True)
+            except:
+                exc = True
+                self.con.rollback()
+        finally:
+            if not exc:
+                self.con.commit()
+
+
+    def loadAllPatientUUIDs(self):
+        with self.manage_transaction() as cur:
+            query = "SELECT uuid FROM storage_user"
+            cur.execute(query)
+            rows = cur.fetchall()
+            if not rows:
+                self.log.error("No Glucose data was returned!")
+                return
+            patients = list()
+            for row in rows:
+                patients.append(row)
+            return patients
+
+
+
 
 class DBConnector:
 
@@ -26,7 +72,6 @@ class DBConnector:
         self.activityData = list()
         self.con = None
 
-    from contextlib import contextmanager
 
     @contextmanager
     def manage_transaction(self, *args, **kw):
@@ -62,7 +107,6 @@ class DBConnector:
         return self.glucoseData, self.insulinData, self.carbData, self.activityData
 
 
-
     def loadGlucoseData(self):
         """
         Retrieve glucose (ground truth) data from database
@@ -73,9 +117,9 @@ class DBConnector:
                     "user_entity_uuid FROM storage_blood_sugar_data " \
                     "cross join (select @rownum := 0) r order by 'time') a WHERE a.user_entity_uuid = '{patientId}'".format(patientId=self.patientId)
             self.log.debug("loadGlucoseData() query: '" + query + "'")
-            print(query)
+
             cur.execute(query)
-            self.log.info("{} rows returned".format(cur.rowcount))
+            self.log.info("{} rows returned".format(cur.rowcount()))
             rows = cur.fetchall()
             if not rows:
                 self.log.error("No Glucose data was returned!")
@@ -98,7 +142,7 @@ class DBConnector:
                     patientId=self.patientId)
                 self.log.debug("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
-                self.log.info("{} rows returned".format(cur.rowcount))
+                self.log.info("{} rows returned".format(cur.rowcount()))
                 rows = cur.fetchall()
                 if not rows:
                     self.log.error("No insulin data was returned!")
@@ -112,7 +156,7 @@ class DBConnector:
                         "WHERE user_entity_uuid = {patientId} and type is not NULL order by 'time'".format(patientId=self.patientId)
                 self.log.debug("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
-                self.log.info("{} rows returned".format(cur.rowcount))
+                self.log.info("{} rows returned".format(cur.rowcount()))
                 rows = cur.fetchall()
                 if not rows:
                     self.log.error("No insulin data was returned!")
@@ -131,7 +175,7 @@ class DBConnector:
                     "WHERE user_entity_uuid = {patientId} order by 'time'".format(patientId=self.patientId)
             self.log.debug("loadCarbohydrateData() query: '" + query + "'")
             cur.execute(query)
-            self.log.debug("{} rows returned".format(cur.rowcount))
+            self.log.debug("{} rows returned".format(cur.rowcount()))
             rows = cur.fetchall()
             if not rows:
                 self.log.error("No carb data was returned!")
@@ -151,7 +195,7 @@ class DBConnector:
                     "WHERE user_entity_uuid = {patientId} order by 'time'".format(patientId=self.patientId)
             self.log.debug("loadActivityData() query: '" + query + "'")
             cur.execute(query)
-            self.log.debug("{} rows returned".format(cur.rowcount))
+            self.log.debug("{} rows returned".format(cur.rowcount()))
             rows = cur.fetchall()
             if not rows:
                 self.log.error("No activity data was returned!")

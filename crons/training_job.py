@@ -1,4 +1,4 @@
-import pickle
+import six.moves.cPickle as pickle
 
 from model.rf import RandomForest
 import logging
@@ -7,9 +7,9 @@ class TrainingManager:
 
     PICKELPATH = '/home/glycorec/BGPrediction-server/persistence/'
 
-    STDDEV_THRSHD = None
-    CONFIDENT_THRSHD = None
-    MIN_SIZE = 25
+    STDDEV_THRSHD = 0
+    CONFIDENT_THRSHD = 0
+    MIN_SIZE = 7
 
     def __init__(self):
         # configure log
@@ -22,18 +22,23 @@ class TrainingManager:
         self.rf.loadData()
 
         if (self.check_criterias_for_training()):
+            self.log.info("start training for patientId: {}".format(patientId))
             self.rf.train()
             self.pickling(patientId)
 
     def pickling(self, patientId):
-        pickle.dumps(self.rf, self.PICKELPATH + patientId + ".pkl", pickle.DEFAULT_PROTOCOL)
+        with open(self.PICKELPATH + patientId + ".pkl", 'wb') as file:
+            pickle.dumps(self.rf.rf, file, pickle.DEFAULT_PROTOCOL)
+
 
     def check_criterias_for_training(self):
+        if self.rf.getTrainingSize() < self.MIN_SIZE: return False
         std, conf = self.rf.getStdDevAndConfidence()
-        size = self.rf.getTrainingSize()
 
-        return std > self.STDDEV_THRSHD and conf > self.CONFIDENT_THRSHD \
-               and size > self.MIN_SIZE
+        print("confident interval: {}, {}".format(std,conf))
+
+
+        return std < self.STDDEV_THRSHD and conf > self.CONFIDENT_THRSHD
 
 
 

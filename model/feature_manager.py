@@ -338,7 +338,7 @@ class FeatureManager:
         # generate one instance per glucose value, starting with the second
         labels = list()
         for i in range(1, self.n_samples):
-
+            labels.append(self.glucoseData[i]['value'])
             features = self.extractFeaturesForOneInstance(i, look_back)
             result.append(features)
 

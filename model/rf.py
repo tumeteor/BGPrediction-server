@@ -32,19 +32,26 @@ class RandomForest(BaseRegressor):
             self.min_samples_leaf = 4 # default parameter for Ranfom Forest
             self.n_estimator = 500
 
-    def getStdDevAndConfidence(self,rf):
+    def getStdDevAndConfidence(self):
 
-        kf = KFold(n_splits=10)
+        kf = KFold(n_splits=3)
 
         maes = []
         v_ijs = []
+        print(len(self.data))
+        print(len(self.y))
+        print(self.data)
+        print(self.y)
         for train_index, test_index in kf.split(self.data):
             X_train, X_test = self.data[train_index], self.data[test_index]
             y_train, y_test = self.y[train_index], self.y[test_index]
+            rf = self.models[self.modelName](n_estimators=self.n_estimator, criterion=self.criterion,
+                                             min_samples_leaf=self.min_samples_leaf)
             rf.fit(X_train, y_train)
             V_IJ, V_IJ_unbiased = self.confidenceCal(X_train, X_test, rf)
-            predictions = rf.predictJob
 
+
+            predictions = rf.predict(X_test)
             mae = mean_absolute_error(y_test, predictions)
             maes.append(mae)
             v_ijs.append(V_IJ)
@@ -65,7 +72,7 @@ class RandomForest(BaseRegressor):
 
 
 
-    def confidenceCal(self, train_data, test_data, test_y, predictions,rf, patientID):
+    def confidenceCal(self, train_data, test_data, rf):
         import forestci as fci
         from matplotlib import pyplot as plt
         import numpy as np
@@ -81,16 +88,17 @@ class RandomForest(BaseRegressor):
 
 
 
-    def train(self, data, y, _featureDesp="all"):
-        assert (len(data) == len(y))
+    def train(self, _featureDesp="all"):
+        assert (len(self.data) == len(self.y))
 
         self.rf = self.models[self.modelName](n_estimators=self.n_estimator, criterion=self.criterion,
                                              min_samples_leaf=self.min_samples_leaf)
 
-        self.rf.fit(data, y)
+        self.rf.fit(self.data, self.y)
 
     def predict(self, instance):
         bg_prediction = self.rf.predictJob(instance)
+        print("predicted BG: {}").format(bg_prediction)
 
         return bg_prediction
 
