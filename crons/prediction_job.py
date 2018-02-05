@@ -2,6 +2,7 @@ import six.moves.cPickle as pickle
 from training_job import TrainingManager
 import os
 import logging
+import datetime
 
 class PredictionManager:
 
@@ -21,7 +22,7 @@ class PredictionManager:
             self.log("model serialization exists.")
         else: return
         self.load_model(patientId)
-        nextIns = self.rf.loadInstance() # get the index of the next bg
+        nextIns = self.rf.getNextInstanceIndex() # get the index of the next bg
         instance = self.rf.extractFeaturesForOneInstance(nextIns)
         if self.check_criterias_for_prediction():
             bg_prediction = self.rf.predictJob(instance)
@@ -37,7 +38,11 @@ class PredictionManager:
     def check_time_gap(self):
         # check time gap from the last
         # measurement
-        pass
+        lastTime = self.rf.getLastBGMeasurement()
+        curTime = datetime.datetime.utcnow()
+        timeGap = curTime - lastTime
+        return timeGap.seconds > TrainingManager.MIN_TIME_GAP
+
 
 
     def storePrediction(self, dbc, patientId, score):
