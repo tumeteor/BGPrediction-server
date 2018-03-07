@@ -1,6 +1,7 @@
 import logging
 from model.feature_manager import FeatureManager
 from utils.dbutil import DBConnector
+from utils.timeutil import strToDateTime
 
 class BaseRegressor(object):
 
@@ -46,8 +47,3 @@ class BaseRegressor(object):
             new_X, desp = self.Features.customFeatureGroupSubset(X)
             return new_X, Y, desp
 
-    def loadInstance(self):
-        return self.Features.getNextInstance()
-
-    def extractFeaturesForOneInstance(self, i):
-        return self.Features.extractFeaturesForOneInstance(i, look_back=self.look_back)

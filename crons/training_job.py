@@ -7,9 +7,10 @@ class TrainingManager:
 
     PICKELPATH = '/home/glycorec/BGPrediction-server/persistence/'
 
-    STDDEV_THRSHD = 0
+    STDDEV_THRSHD = 0.5
     CONFIDENT_THRSHD = 0
     MIN_SIZE = 7
+    MIN_TIME_GAP = 60 * 60
 
     def __init__(self):
         # configure log
@@ -25,20 +26,22 @@ class TrainingManager:
             self.log.info("start training for patientId: {}".format(patientId))
             self.rf.train()
             self.pickling(patientId)
+    def getTrainingSize(self):
+        return len(self.rf.glucoseData)
 
     def pickling(self, patientId):
         with open(self.PICKELPATH + patientId + ".pkl", 'wb') as file:
-            pickle.dumps(self.rf.rf, file, pickle.DEFAULT_PROTOCOL)
+            pickle.dump(self.rf.rf, file, 2)
 
 
     def check_criterias_for_training(self):
         if self.rf.getTrainingSize() < self.MIN_SIZE: return False
-        std, conf = self.rf.getStdDevAndConfidence()
+        std = self.rf.getStdDevAndConfidence()
 
-        print("confident interval: {}, {}".format(std,conf))
+        print("confident interval: {}".format(std))
 
 
-        return std < self.STDDEV_THRSHD and conf > self.CONFIDENT_THRSHD
+        return std < self.STDDEV_THRSHD
 
 
 

@@ -48,15 +48,15 @@ class RandomForest(BaseRegressor):
             rf = self.models[self.modelName](n_estimators=self.n_estimator, criterion=self.criterion,
                                              min_samples_leaf=self.min_samples_leaf)
             rf.fit(X_train, y_train)
-            V_IJ, V_IJ_unbiased = self.confidenceCal(X_train, X_test, rf)
+            #V_IJ, V_IJ_unbiased = self.confidenceCal(X_train, X_test, rf)
 
 
             predictions = rf.predict(X_test)
             mae = mean_absolute_error(y_test, predictions)
             maes.append(mae)
-            v_ijs.append(V_IJ)
+            #v_ijs.append(V_IJ)
 
-        return np.std(maes), np.mean(v_ijs)
+        return np.std(maes)
 
 
     def getTrainingSize(self):
@@ -97,7 +97,7 @@ class RandomForest(BaseRegressor):
         self.rf.fit(self.data, self.y)
 
     def predict(self, instance):
-        bg_prediction = self.rf.predictJob(instance)
+        bg_prediction = self.rf.predict(instance)
         print("predicted BG: {}").format(bg_prediction)
 
         return bg_prediction

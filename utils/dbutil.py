@@ -3,12 +3,12 @@ import pandas as pd
 import time, datetime
 import logging
 from contextlib import contextmanager
-
+import uuid
 
 class _DBConnector:
     config = {
-        'user': 'root',
-        'password': 'pu9eek9I',
+        'user': 'xxx',
+        'password': 'xxx',
         'host': '127.0.0.1',
         'database': 'glycorec_server',
         'raise_on_warnings': True
@@ -25,7 +25,8 @@ class _DBConnector:
             try:
                 self.con.start_transaction(*args, **kw)
                 yield self.con.cursor(dictionary=True)
-            except:
+            except mysql.connector.Error as err:
+                print(err)
                 exc = True
                 self.con.rollback()
         finally:
@@ -80,7 +81,8 @@ class DBConnector:
             try:
                 self.con.start_transaction(*args, **kw)
                 yield self.con.cursor(dictionary=True)
-            except:
+            except mysql.connector.Error as err:
+                print(err)
                 exc = True
                 self.con.rollback()
         finally:
@@ -90,6 +92,7 @@ class DBConnector:
 
     def connectDB(self):
         self.con = mysql.connector.connect(**self.config)
+        self.con.set_converter_class(NumpyMySQLConverter)
 
     def closeDB(self):
         self.con.close()
@@ -109,7 +112,7 @@ class DBConnector:
 
     def loadGlucoseData(self):
         """
-        Retrieve glucose (ground truth) data from database
+        Retrieve glucose (ground truth) data from databasev
         """
         self.log.info("Loading Glucose data for patient {}".format(self.patientId))
         with self.manage_transaction() as cur:
@@ -119,7 +122,6 @@ class DBConnector:
             self.log.debug("loadGlucoseData() query: '" + query + "'")
 
             cur.execute(query)
-            self.log.info("{} rows returned".format(cur.rowcount()))
             rows = cur.fetchall()
             if not rows:
                 self.log.error("No Glucose data was returned!")
@@ -127,7 +129,8 @@ class DBConnector:
             for row in rows:
                 self.glucoseData.append(row)
 
-        self.log.debug("{} glucose measurements returned".format(len(self.glucoseData)))
+
+        self.log.info("{} glucose measurements returned".format(len(self.glucoseData)))
 
     def loadInsulinData(self, ignoreBasal=False):
         """
@@ -136,13 +139,11 @@ class DBConnector:
         self.log.info("Loading insulin data for patient {}".format(self.patientId))
         if ignoreBasal:
             with self.manage_transaction() as cur:
-                cur = self.con.cursor()
-                query = "SELECT date_time as 'time', insulin_units as 'value', type FROM storage_insulin_data " \
+                query = "SELECT DISTINCT date_time as 'time', CONVERT(insulin_units, UNSIGNED INTEGER) as 'value', type FROM storage_insulin_data " \
                         "WHERE user_entity_uuid = {patientId} and type=1 order by 'time'".format(
                     patientId=self.patientId)
-                self.log.debug("loadInsulinData() query: '" + query + "'")
+                self.log.info("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
-                self.log.info("{} rows returned".format(cur.rowcount()))
                 rows = cur.fetchall()
                 if not rows:
                     self.log.error("No insulin data was returned!")
@@ -151,18 +152,18 @@ class DBConnector:
                     self.insulinData.append(row)
         else:
             with self.manage_transaction() as cur:
-                cur = self.con.cursor()
-                query = "SELECT date_time as 'time', insulin_units as 'value', type FROM storage_insulin_data " \
+                query = "SELECT DISTINCT date_time as 'time', CONVERT(insulin_units, UNSIGNED INTEGER) as 'value', type FROM storage_insulin_data " \
                         "WHERE user_entity_uuid = {patientId} and type is not NULL order by 'time'".format(patientId=self.patientId)
-                self.log.debug("loadInsulinData() query: '" + query + "'")
+                self.log.info("loadInsulinData() query: '" + query + "'")
                 cur.execute(query)
-                self.log.info("{} rows returned".format(cur.rowcount()))
                 rows = cur.fetchall()
+                self.log.info("row size: {}".format(len(rows)))
                 if not rows:
                     self.log.error("No insulin data was returned!")
                     return
                 for row in rows:
                     self.insulinData.append(row)
+        self.log.info("{} insulin measurements returned".format(len(self.insulinData)))
 
     def loadCarbData(self):
         """
@@ -170,18 +171,18 @@ class DBConnector:
         """
         self.log.info("Loading carbohydrate data for patient {}".format(self.patientId))
         with self.manage_transaction() as cur:
-            cur = self.con.cursor()
-            query = "SELECT date_time as 'time', kcal as 'value' FROM storage_meal_data " \
+            query = "SELECT DISTINCT  date_time as 'time', CONVERT(kcal, UNSIGNED INTEGER) as 'value' FROM storage_meal_data " \
                     "WHERE user_entity_uuid = {patientId} order by 'time'".format(patientId=self.patientId)
-            self.log.debug("loadCarbohydrateData() query: '" + query + "'")
+            self.log.info("loadCarbohydrateData() query: '" + query + "'")
             cur.execute(query)
-            self.log.debug("{} rows returned".format(cur.rowcount()))
             rows = cur.fetchall()
             if not rows:
                 self.log.error("No carb data was returned!")
                 return
             for row in rows:
                 self.carbData.append(row)
+                print(len(self.carbData))
+        self.log.info("{} carb measurements returned".format(len(self.carbData)))
 
     def loadActivityData(self):
         """
@@ -191,7 +192,7 @@ class DBConnector:
         self.log.info("Loading activity data for patient {}".format(self.patientId))
         with self.manage_transaction() as cur:
             cur = self.con.cursor()
-            query = "SELECT date_time as 'time', kcal as 'value' FROM storage_planned_activity " \
+            query = "SELECT DISTINCT  date_time as 'time', CONVERT(kcal, UNSIGNED INTEGER) as 'value' FROM storage_planned_activity " \
                     "WHERE user_entity_uuid = {patientId} order by 'time'".format(patientId=self.patientId)
             self.log.debug("loadActivityData() query: '" + query + "'")
             cur.execute(query)
@@ -207,7 +208,6 @@ class DBConnector:
 
     def loadTimestamps(self, patientId):
         with self.manage_transaction() as cur:
-            cur = self.con.cursor()
             query = "SELECT * FROM (SELECT @rownum := @rownum + 1 as pos, bs_date_created as 'date' FROM storage_blood_sugar_data " \
                     "cross join (select @rownum := 0) r order by 'time') WHERE a.user_entity_uuid = {patientId}".format(patientId=patientId)
             df = pd.read_sql(query, self.con)
@@ -222,23 +222,37 @@ class DBConnector:
         ts = time.time()
         timestamp = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
         with self.manage_transaction() as cur:
-            cur = self.con.cursor
             # sql = "INSERT into storage_recommendation_data (date_time, score, type, user_entity_uuid ) VALUES  \
             #     (%(date_time)s, %(score)s, %(ptype)s, %(user_entity_uuid)s)."
 
-            sql = "INSERT INTO storage_blood_suger_prediction (date_time, probability, value_mgdl, value_mmoll, user_entity_uuid) VALUES \
-                (%(date_time)s, %(probability)s, %(value_mgdl)s, %(value_mmoll)s"
+            sql = "INSERT INTO storage_blood_sugar_prediction (uuid, date_time, value_mgdl, user_entity_uuid) VALUES" \
+                "(%(uuid)s, %(date_time)s, %(value_mgdl)s, %(user_entity_uuid)s)"
             self.log.info("insert prediction for user {}:".format(patientId))
+            print(sql)
             cur.execute(sql, {
+                "uuid": str(uuid.uuid1()),
                 "date_time": timestamp,
-                "score": score,
-                "ptype": ptype,
+                "value_mgdl": score[0],
                 "user_entity_uuid": patientId
             })
+            self.con.commit()
 
 
 
+class NumpyMySQLConverter(mysql.connector.conversion.MySQLConverter):
+    """ A mysql.connector Converter that handles Numpy types """
 
+    def _float32_to_mysql(self, value):
+        return float(value)
+
+    def _float64_to_mysql(self, value):
+        return float(value)
+
+    def _int32_to_mysql(self, value):
+        return int(value)
+
+    def _int64_to_mysql(self, value):
+        return int(value)
 
 
 

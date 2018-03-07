@@ -337,6 +337,7 @@ class FeatureManager:
         result = list()
         # generate one instance per glucose value, starting with the second
         labels = list()
+        print("number of samples: {}".format(self.n_samples))
         for i in range(1, self.n_samples):
             labels.append(self.glucoseData[i]['value'])
             features = self.extractFeaturesForOneInstance(i, look_back)
@@ -352,10 +353,6 @@ class FeatureManager:
                np.array(labels)
                #np.array([row['value'] for row in self.glucoseData[1:]])
 
-    def getNextInstance(self):
-        # return the idx of the next bg measurement
-
-        return self.n_samples
 
 
 class FeatureGroup:
