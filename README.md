@@ -4,12 +4,12 @@ This documentation is for the backend service of Glycorec Blood Glucose Predicti
 
 ### Prerequisites
 
-Python (>= 2.7 or >= 3.3,
-NumPy (>= 1.8.2),
-SciPy (>= 0.13.3),
-Scikit-learn (>=0.16),
-APScheduler (>=3.3.0),
-mysql-connector-python (>=2.0),
+Python (>= 2.7 or >= 3.3,  
+NumPy (>= 1.8.2),  
+SciPy (>= 0.13.3),  
+Scikit-learn (>=0.16),  
+APScheduler (>=3.3.0),  
+mysql-connector-python (>=2.0),  
 Pandas (>=0.12.0).
 
 ## Getting Started
