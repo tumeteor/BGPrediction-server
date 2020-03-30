@@ -5,14 +5,14 @@ from sklearn.model_selection import GridSearchCV, KFold
 from model.base_regressor import BaseRegressor
 import numpy as np
 
-class RandomForest(BaseRegressor):
 
+class RandomForest(BaseRegressor):
     best_params = None
 
     param_grid = {"n_estimators": [100, 250, 300, 400, 500, 700, 1000],
                   "criterion": ["mae", "mse"],
                   "max_features": ["auto", "sqrt", "log2"],
-                  "min_samples_leaf": range(1,6)}
+                  "min_samples_leaf": range(1, 6)}
 
     ### Model ####
     # Extratree seems to deal better for small dataset + overfitting
@@ -20,59 +20,50 @@ class RandomForest(BaseRegressor):
 
     n_estimator = 300
     criterion = "mse"
-    min_samples_leaf = 2 # small for ExtraTree is helpful
-
+    min_samples_leaf = 2  # small for ExtraTree is helpful
 
     def __init__(self, patientId, modelName):
         super(RandomForest, self).__init__(patientId=patientId)
         self.log.info("Init Random Forest")
         self.modelName = modelName
-        #self.tune = True
+        # self.tune = True
         if self.modelName == "rf":
-            self.min_samples_leaf = 4 # default parameter for Ranfom Forest
+            self.min_samples_leaf = 4  # default parameter for Ranfom Forest
             self.n_estimator = 500
 
-    def getStdDevAndConfidence(self):
+    def get_stddev_and_confidence(self):
 
         kf = KFold(n_splits=3)
 
         maes = []
         v_ijs = []
-        print(len(self.data))
-        print(len(self.y))
-        print(self.data)
-        print(self.y)
         for train_index, test_index in kf.split(self.data):
             X_train, X_test = self.data[train_index], self.data[test_index]
             y_train, y_test = self.y[train_index], self.y[test_index]
             rf = self.models[self.modelName](n_estimators=self.n_estimator, criterion=self.criterion,
                                              min_samples_leaf=self.min_samples_leaf)
             rf.fit(X_train, y_train)
-            #V_IJ, V_IJ_unbiased = self.confidenceCal(X_train, X_test, rf)
-
+            # V_IJ, V_IJ_unbiased = self.confidence_cal(X_train, X_test, rf)
 
             predictions = rf.predict(X_test)
             mae = mean_absolute_error(y_test, predictions)
             maes.append(mae)
-            #v_ijs.append(V_IJ)
+            # v_ijs.append(V_IJ)
 
         return np.std(maes)
 
-
-    def getTrainingSize(self):
+    def get_training_size(self):
         return len(self.data)
 
-
-    def loadData(self):
-        if not self._customizeFeatureSet:
+    def load_data(self):
+        if not self._customize_feature_set:
             # generate features
-            self.data, self.y = self.extractFeatures()
+            self.data, self.y = self.extract_features()
         else:
-            self.data, self.y, _featureDesp = self.extractFeatures(customizeFeatureSet=True)
+            self.data, self.y, _featureDesp = self.extract_features(customize_feature_set=True)
 
-
-
-    def confidenceCal(self, train_data, test_data, rf):
+    @staticmethod
+    def confidence_cal(train_data, test_data, rf):
         import forestci as fci
         from matplotlib import pyplot as plt
         import numpy as np
@@ -86,22 +77,16 @@ class RandomForest(BaseRegressor):
 
         return inbag, V_IJ_unbiased
 
-
-
-    def train(self, _featureDesp="all"):
+    def train(self, _feature_desp="all"):
         assert (len(self.data) == len(self.y))
 
         self.rf = self.models[self.modelName](n_estimators=self.n_estimator, criterion=self.criterion,
-                                             min_samples_leaf=self.min_samples_leaf)
+                                              min_samples_leaf=self.min_samples_leaf)
 
         self.rf.fit(self.data, self.y)
 
     def predict(self, instance):
         bg_prediction = self.rf.predict(instance)
-        print("predicted BG: {}").format(bg_prediction)
+        print("predicted BG: {}".format(bg_prediction))
 
         return bg_prediction
-
-
-
-

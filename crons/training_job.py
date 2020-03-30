@@ -3,8 +3,8 @@ import six.moves.cPickle as pickle
 from model.rf import RandomForest
 import logging
 
-class TrainingManager:
 
+class TrainingManager:
     PICKELPATH = '/home/glycorec/BGPrediction-server/persistence/'
 
     STDDEV_THRSHD = 0.5
@@ -18,36 +18,26 @@ class TrainingManager:
                             datefmt='%d.%m.%Y %I:%M:%S %p', level=logging.INFO)
         self.log = logging.getLogger("TrainingManager")
 
-    def trainingJob(self, patientId):
-        self.rf = RandomForest(patientId=patientId,modelName="rf")
-        self.rf.loadData()
+    def training_job(self, patientId):
+        self.rf = RandomForest(patientId=patientId, modelName="rf")
+        self.rf.load_data()
 
-        if (self.check_criterias_for_training()):
-            self.log.info("start training for patientId: {}".format(patientId))
+        if self.check_criterias_for_training():
+            self.log.info("start training for patient_id: {}".format(patientId))
             self.rf.train()
             self.pickling(patientId)
-    def getTrainingSize(self):
+
+    def get_training_size(self):
         return len(self.rf.glucoseData)
 
     def pickling(self, patientId):
         with open(self.PICKELPATH + patientId + ".pkl", 'wb') as file:
             pickle.dump(self.rf.rf, file, 2)
 
-
     def check_criterias_for_training(self):
-        if self.rf.getTrainingSize() < self.MIN_SIZE: return False
-        std = self.rf.getStdDevAndConfidence()
+        if self.rf.get_training_size() < self.MIN_SIZE: return False
+        std = self.rf.get_stddev_and_confidence()
 
         print("confident interval: {}".format(std))
 
-
         return std < self.STDDEV_THRSHD
-
-
-
-
-
-
-
-
-

@@ -7,6 +7,7 @@ from utils.dbutil import DBConnector
 from model.feature_manager import FeatureManager
 import numpy as np
 
+
 class PredictionManager:
 
     def __init__(self, patientId):
@@ -17,7 +18,7 @@ class PredictionManager:
         self.dbc = DBConnector(patientId=patientId)
         self.patientId = patientId
         self.log.info("Start loading data from DB.")
-        self.glucoseData, self.insulinData, self.carbData, self.activityData = self.dbc.loadAllData()
+        self.glucoseData, self.insulinData, self.carbData, self.activityData = self.dbc.load_all_data()
         self.log.info("End loading data from DB.")
         self.look_back = 8
 
@@ -29,21 +30,21 @@ class PredictionManager:
         with open(TrainingManager.PICKELPATH + self.patientId + ".pkl", 'rb') as f:
             self.rf = pickle.load(f)
 
-
-    def predictJob(self):
+    def predict_job(self):
         if os.path.isfile(TrainingManager.PICKELPATH + self.patientId + ".pkl"):
             self.log.info("model serialization exists.")
-        else: return
+        else:
+            return
         self.load_model()
-        nextIns = self.getNextInstanceIndex()# get the index of the next bg
+        nextIns = self.get_next_instance_index()  # get the index of the next bg
         '''
         check if there is a new blood glucose measurements
         only predict if there is a new BG input in between job interval
         '''
         if self.check_criterias_for_prediction():
-            instance = self.extractFeaturesForOneInstance(nextIns)
+            instance = self.extract_features_for_one_instance(nextIns)
             bg_prediction = self.rf.predict(instance)
-            self.storePrediction(self.patientId, bg_prediction)
+            self.store_prediction(self.patientId, bg_prediction)
         else:
             return
 
@@ -56,26 +57,21 @@ class PredictionManager:
     def check_time_gap(self):
         # check time gap from the last
         # measurement, must be at least 1 hour
-        lastTime = self.getLastBGMeasurement()
+        lastTime = self.get_last_bg_measurement()
         curTime = datetime.datetime.utcnow()
         timeGap = curTime - lastTime
         return timeGap.seconds > TrainingManager.MIN_TIME_GAP
 
-    def getNextInstanceIndex(self):
+    def get_next_instance_index(self):
         return len(self.glucoseData) - 1
 
-    def getLastBGMeasurement(self):
+    def get_last_bg_measurement(self):
         return self.glucoseData[-2]['time']
 
-    def extractFeaturesForOneInstance(self, i):
-        ins_features = np.array(self.Features.extractFeaturesForOneInstance(i, look_back=self.look_back))
+    def extract_features_for_one_instance(self, i):
+        ins_features = np.array(self.Features.extract_features_for_one_instance(i, look_back=self.look_back))
         ins_features = np.reshape(ins_features, (-1, len(ins_features)))
         return ins_features
 
-
-    def storePrediction(self, patientId, score):
-        self.dbc.storePrediction(patientId=patientId, score=score, ptype="regression")
-
-
-
-
+    def store_prediction(self, patientId, score):
+        self.dbc.store_prediction(patient_id=patientId, score=score, ptype="regression")

@@ -5,35 +5,33 @@ from utils.dbutil import _DBConnector
 
 trainMan = TrainingManager()
 
-
 conn = _DBConnector()
-def trainJob(patientId):
-    trainMan.trainingJob(patientId)
 
-def predJob(patientId):
+
+def train_job(patientId):
+    trainMan.training_job(patientId)
+
+
+def pred_job(patientId):
     predMan = PredictionManager(patientId)
-    predMan.predictJob()
+    predMan.predict_job()
+
 
 if __name__ == '__main__':
     scheduler = BlockingScheduler(timezone='UTC')
     scheduler.add_executor('processpool')
 
-    patientIds = conn.loadAllPatientUUIDs()
-    #patientIds = ["8","15"]
+    patientIds = conn.load_all_patient_uuids()
+    # patientIds = ["8","15"]
 
     # add cron job for each patient
     for patientId in patientIds:
-        scheduler.add_job(trainJob, 'interval', args=[patientId], seconds=6)
+        scheduler.add_job(train_job, 'interval', args=[patientId], seconds=6)
 
-        scheduler.add_job(predJob, 'interval', args=[patientId], seconds=6)
+        scheduler.add_job(pred_job, 'interval', args=[patientId], seconds=6)
 
     try:
         print("Start Scheduler.")
         scheduler.start()
     except (SystemExit):
         pass
-
-
-
-
-

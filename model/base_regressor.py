@@ -1,7 +1,8 @@
 import logging
 from model.feature_manager import FeatureManager
 from utils.dbutil import DBConnector
-from utils.timeutil import strToDateTime
+from utils.timeutil import str_to_datetime
+
 
 class BaseRegressor(object):
 
@@ -12,11 +13,11 @@ class BaseRegressor(object):
 
         self.dbc = DBConnector(patientId=patientId)
         self.log.info("Start loading data from DB.")
-        self.glucoseData, self.insulinData, self.carbData, self.activityData = self.dbc.loadAllData()
+        self.glucoseData, self.insulinData, self.carbData, self.activityData = self.dbc.load_all_data()
         self.log.info("End loading data from DB.")
 
         ###### LOAD Feature Extraction ####
-        self.Features = FeatureManager(self.glucoseData, self.insulinData, self.carbData,
+        self.features = FeatureManager(self.glucoseData, self.insulinData, self.carbData,
                                        self.activityData)
         # tuning option for RF
         # set it now as a common parameter
@@ -29,21 +30,19 @@ class BaseRegressor(object):
 
         # customize feature set option
         # TODO: set from outside
-        self._customizeFeatureSet = False
+        self._customize_feature_set = False
 
-        self._allFeatureDesp = list()
-
+        self._all_feature_desp = list()
 
     def train(self):
         raise NotImplementedError()
 
-    def extractFeatures(self, customizeFeatureSet=False, customGroup=None):
-        X, Y = self.Features.buildFeatureMatrix(self.look_back)
-        if customGroup != None:
-            return self.Features.customFeatureGroup(X, customGroup), Y
-        if not customizeFeatureSet:
+    def extract_features(self, customize_feature_set=False, custom_group=None):
+        X, Y = self.features.build_feature_matrix(self.look_back)
+        if custom_group is not None:
+            return self.features.custom_feature_group(X, custom_group), Y
+        if not customize_feature_set:
             return X, Y
         else:
-            new_X, desp = self.Features.customFeatureGroupSubset(X)
+            new_X, desp = self.features.customFeatureGroupSubset(X)
             return new_X, Y, desp
-

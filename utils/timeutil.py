@@ -1,9 +1,11 @@
 import time
 import datetime
+
 _night = "night"
 _morning = "morning"
 _afternoon = "afternoon"
 _evening = "evening"
+
 
 def tohour(duration):
     """
@@ -15,22 +17,24 @@ def tohour(duration):
     hours = days * 24 + seconds // 3600
     return hours
 
-def strToDateTime(t):
-    return time.strptime(t,"'%d/%m/%y %H:%M:%S")
+
+def str_to_datetime(t):
+    return time.strptime(t, "'%d/%m/%y %H:%M:%S")
 
 
-def getTimeBinInt(timestamp):
-    binString = getTimeBin(timestamp)
-    if binString == _night:
+def get_time_bin_int(timestamp):
+    bin_string = get_time_bin(timestamp)
+    if bin_string == _night:
         return 0
-    if binString == _morning:
+    if bin_string == _morning:
         return 1
-    if binString == _afternoon:
+    if bin_string == _afternoon:
         return 2
-    if binString == _evening:
+    if bin_string == _evening:
         return 3
 
-def getTimeBin(timestamp):
+
+def get_time_bin(timestamp):
     """
     Return the time bin for the given datetime input
     :param timestamp: datetime object
@@ -45,28 +49,28 @@ def getTimeBin(timestamp):
     end_afternoon = datetime.time(17, 59, 59)
     start_evening = datetime.time(18, 0, 0)
     end_evening = datetime.time(23, 59, 59)
-    if checkTimeInterval(timestamp, start_night, end_night):
+    if check_time_interval(timestamp, start_night, end_night):
         return _night
-    if checkTimeInterval(timestamp, start_morning, end_morning):
+    if check_time_interval(timestamp, start_morning, end_morning):
         return _morning
-    if checkTimeInterval(timestamp, start_afternoon, end_afternoon):
+    if check_time_interval(timestamp, start_afternoon, end_afternoon):
         return _afternoon
-    if checkTimeInterval(timestamp, start_evening, end_evening):
+    if check_time_interval(timestamp, start_evening, end_evening):
         return _evening
     raise ArithmeticError
 
-def checkTimeInterval(datetimeInput, start, end):
+
+def check_time_interval(datetime_input, start, end):
     """
     Check whether given datetime input falls into the interval defined by datetime.time values start and end
     :return: boolean
     """
-    assert(datetimeInput)
+    assert (datetime_input)
     # TODO: avoid this! use timestamps in the database instead or transform the timestamps to UTC in import!!
-    datetimeInput = datetimeInput + datetime.timedelta(minutes=60)
-    assert(start < end)
-    timeInput = datetime.time(
-        datetimeInput.hour,
-        datetimeInput.minute,
-        datetimeInput.second)
-    return start <= timeInput <= end
-
+    datetime_input = datetime_input + datetime.timedelta(minutes=60)
+    assert (start < end)
+    time_input = datetime.time(
+        datetime_input.hour,
+        datetime_input.minute,
+        datetime_input.second)
+    return start <= time_input <= end

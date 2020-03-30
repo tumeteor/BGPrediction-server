@@ -49,5 +49,5 @@ The MySQL configurations are in "utils/dbutil.py"
 The time interval for each cron job is configurable in "crons/scheduler.py". For example:
 
 ```
-scheduler.add_job(trainJob, 'interval', args=[patientId], seconds=6)
+scheduler.add_job(train_job, 'interval', args=[patientId], seconds=6)
 ```
